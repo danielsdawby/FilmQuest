@@ -108,7 +108,6 @@ export const getTrendingMovies = async (req, res) => {
         res.status(500).json({ error: "Ошибка при получении трендов" });
     }
 };
-
 export const getUpcomingMovies = async (req, res) => {
     try {
         const response = await axios.get(`${TMDB_API_URL}/movie/upcoming`, {
@@ -116,7 +115,31 @@ export const getUpcomingMovies = async (req, res) => {
             headers: HEADERS,
         });
 
-        res.json(response.data);
+        const movies = response.data.results;
+
+        const moviesWithVideos = await Promise.all(
+            movies.slice(0, 10).map(async (movie) => {
+                try {
+                    const videoRes = await axios.get(`${TMDB_API_URL}/movie/${movie.id}/videos`, {
+                        params: { language: "ru-RU" },
+                        headers: HEADERS,
+                    });
+
+                    const trailers = videoRes.data.results.filter(
+                        (v) => v.type === "Trailer" && v.site === "YouTube"
+                    );
+
+                    return {
+                        ...movie,
+                        trailer: trailers.length > 0 ? `https://www.youtube.com/embed/${trailers[0].key}` : null,
+                    };
+                } catch {
+                    return { ...movie, trailer: null };
+                }
+            })
+        );
+
+        res.json({ results: moviesWithVideos });
     } catch (error) {
         console.error("Ошибка при получении премьер:", error.message);
         res.status(500).json({ error: "Ошибка при получении премьер" });

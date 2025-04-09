@@ -5,6 +5,7 @@ import TrendingMoviesSlider from "../components/TrendingMoviesSlider";
 import ItemCart from "../components/ItemCart";
 import Grid from '../assets/images/grid.svg';
 import Row from '../assets/images/row.svg';
+import UpcomingPremieres from "../components/UpcomingPremieres";
 
 const HomePage = () => {
     const { movies, loading, error } = useSelector((state) => state.movie);
@@ -72,7 +73,7 @@ const HomePage = () => {
     return (
         <div className="bg-dark text-white">
             <div className="container">
-                <TrendingMoviesSlider />
+                <UpcomingPremieres />
                 <div className="flex justify-between gap-5 mt-10">
                     <div className="flex flex-col items-center text-2xl max-w-[200px] gap-4 w-full mt-20">
                         <button onClick={() => handleButtonSwitch(0)} className="btn">Рекомендации</button>
@@ -103,14 +104,14 @@ const HomePage = () => {
                             <div className="flex items-center gap-5">
                                 <button
                                     className="p-2 bg-accent rounded"
-                                    disabled={!gridLayout}
+                                    disabled={gridLayout}
                                     onClick={() => handleGridLayoutChange()}
                                 >
                                     <img src={Row} alt="Row Layout" />
                                 </button>
                                 <button
                                     className="p-2 bg-accent rounded"
-                                    disabled={gridLayout}
+                                    disabled={!gridLayout}
                                     onClick={() => handleGridLayoutChange()}
                                 >
                                     <img src={Grid} alt="Grid Layout" />
@@ -118,7 +119,7 @@ const HomePage = () => {
                             </div>
                         </div>
 
-                        <div className={`${gridLayout ? "grid grid-cols-6 gap-4" : "block"}`}>
+                        <div className={gridLayout ? "grid grid-cols-6 gap-4" : "block"}>
                             {loading && <p>Loading movies...</p>}
                             {error && <p>Error: {error}</p>}
 
