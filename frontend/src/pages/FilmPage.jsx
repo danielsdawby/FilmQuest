@@ -53,6 +53,7 @@ const FilmPage = () => {
             <p className="italic text-gray-400">{movie.tagline}</p>
           )}
 
+          {/* Overview */}
           <p className="text-gray-300 text-lg leading-relaxed">{movie.overview}</p>
 
           <div className="space-y-2 text-sm text-gray-400">
@@ -66,7 +67,7 @@ const FilmPage = () => {
             <p><span className="font-semibold text-white">Языки:</span> {movie.spoken_languages.map(l => l.name).join(", ")}</p>
           </div>
 
-
+          {/* Actors Section */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-white">Актеры</h3>
             <div className="flex flex-wrap gap-4">
@@ -88,6 +89,7 @@ const FilmPage = () => {
             </div>
           </div>
 
+          {/* Buttons */}
           <div className="flex flex-wrap gap-4 pt-4">
             <button
               onClick={addToWatched}

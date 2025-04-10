@@ -1,30 +1,38 @@
-import express from "express";
-import {
-    getMovies,
-    searchMovies,
-    getRecommendations,
-    getTrendingMovies,
+import express from 'express';
+import { 
+    getMovies, 
+    searchMovies, 
+    getRecommendations, 
+    getTrendingMovies, 
     getUpcomingMovies, 
-    getOneMovie,
-    getMoviesByGenre,
-    addWatchedMovie,
-    getWatchedMovies,
-    getTotalWatchTime,
+    getMoviesByGenre, 
+    addWatchedMovie, 
+    getTotalWatchTime, 
     checkMovieInLists,
-} from "../controllers/movie.controller.js";
+    getOneMovie,
+    getWatchedMovies
+} from '../controllers/movie.controller.js';
+import { protectedRoute } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 router.get("/", getMovies);
 router.get("/search", searchMovies);
-router.get("/trending", getTrendingMovies);
-router.get("/upcoming", getUpcomingMovies); // ← Добавь этот маршрут
 router.get("/recommendations/:movieId", getRecommendations);
+router.get("/trending", getTrendingMovies);
+router.get("/upcoming", getUpcomingMovies);
 router.get("/genre/:genreId", getMoviesByGenre);
-router.get("/watched", getWatchedMovies);
-router.get("/total-watch-time", getTotalWatchTime);
-router.get("/check", checkMovieInLists);
+
+
+router.post("/watched", protectedRoute, addWatchedMovie);
+router.get("/watched", protectedRoute, getWatchedMovies);
+
+
+router.get("/watchtime/:userId", protectedRoute, getTotalWatchTime);
+router.get("/check", protectedRoute, checkMovieInLists);
+
 router.get("/:id", getOneMovie);
-router.post("/watched", addWatchedMovie);
+
+
 
 export default router;

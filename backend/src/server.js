@@ -23,7 +23,7 @@ app.use(
       })
 );
 
-
+app.use('/api/note', noteRoutes)
 app.use('/api/auth', authRoutes);
 app.use('/api/movie', movieRoutes);
 app.use('/api/note', noteRoutes);

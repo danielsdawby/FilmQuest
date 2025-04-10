@@ -108,6 +108,7 @@ export const getTrendingMovies = async (req, res) => {
         res.status(500).json({ error: "Ошибка при получении трендов" });
     }
 };
+
 export const getUpcomingMovies = async (req, res) => {
     try {
         const response = await axios.get(`${TMDB_API_URL}/movie/upcoming`, {
