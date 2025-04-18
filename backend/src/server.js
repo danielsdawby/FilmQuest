@@ -9,6 +9,8 @@ import { connectDB } from "./lib/db.js";
 import authRoutes from './routes/auth.route.js';
 import movieRoutes from './routes/movie.route.js';
 import noteRoutes from './routes/note.route.js';
+import watchListRoutes from './routes/watchList.route.js';
+import personRoutes from './routes/person.route.js';
 
 const PORT = process.env.PORT;
 const FRONT_URL = process.env.FRONT_URL;
@@ -26,7 +28,10 @@ app.use(
 app.use('/api/note', noteRoutes)
 app.use('/api/auth', authRoutes);
 app.use('/api/movie', movieRoutes);
+app.use('/api/watch-list', watchListRoutes);
 app.use('/api/note', noteRoutes);
+app.use('/api/person', personRoutes);
+
 
 app.listen(PORT, () => {
     console.log(`Сервер запущен на порту ${PORT}`)

@@ -19,14 +19,17 @@ export const getWatchList = createAsyncThunk("watchlist/getWatchList", async (_,
   }
 });
 
-export const removeFromWatchlist = createAsyncThunk("watchlist/removeFromWatchlist", async (movieId, { rejectWithValue }) => {
-  try {
-    const response = await axios.delete(`/api/movie/${movieId}`);
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response.data);
+export const removeFromWatchlist = createAsyncThunk(
+  "watchlist/removeFromWatchlist",
+  async (movieId, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`/api/watch-list/${movieId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
   }
-});
+);
 
 const watchlistSlice = createSlice({
   name: "watchlist",

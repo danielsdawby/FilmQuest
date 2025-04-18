@@ -8,8 +8,9 @@ const store = configureStore({
   reducer: {
     auth: authReducer,
     movie: movieReducer,
-    note: noteReducer,
+    notes: noteReducer,
     watchlist: watchlistReducer,
+
   },
 });
 

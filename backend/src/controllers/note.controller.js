@@ -3,7 +3,7 @@ import Note from "../models/note.model.js";
 export const addMovieNote = async (req, res) => {
     try {
         const { movieId, note } = req.body;
-        const { userId} = req.body;
+        const userId = req.user.id
 
         if (!userId || !movieId || !note) {
             return res.status(400).json({ error: "Требуется указать ID пользователя, ID фильма и заметку." });
@@ -22,7 +22,7 @@ export const addMovieNote = async (req, res) => {
         });
 
         await newNote.save();
-        res.status(201).json({ message: "Заметка успешно добавлена." });
+        res.status(201).json({ message: "Заметка успешно добавлена.", note: newNote });
     } catch (error) {
         console.error("Ошибка при добавлении заметки к фильму:", error.message);
         res.status(500).json({ error: "Внутренняя ошибка сервера" });
@@ -30,15 +30,11 @@ export const addMovieNote = async (req, res) => {
 };
 
 export const deleteMovieNote = async (req, res) => {
-    const { movieId } = req.params;
-    const { userId } = req.user;
+    const { id } = req.params;
 
     try {
-        if (!userId || !movieId) {
-            return res.status(400).json({ error: "Требуется указать ID пользователя и ID фильма." });
-        }
 
-        const deletedItem = await Note.findOneAndDelete({ movieId, userId });
+        const deletedItem = await Note.findByIdAndDelete(id);
 
         if (!deletedItem) {
             return res.status(404).json({ message: "Note list item not found" });
@@ -55,7 +51,7 @@ export const deleteMovieNote = async (req, res) => {
 export const getOneMovieNote = async (req, res) => {
     try {
         const { movieId } = req.params;
-        const { userId } = req.userl
+        const userId = req.user.id
 
         if (!userId || !movieId) {
             return res.status(400).json({ error: "Требуется указать ID пользователя ID фильма." });
@@ -67,7 +63,7 @@ export const getOneMovieNote = async (req, res) => {
             return res.status(404).json({ error: "Заметка не найдена." });
         }
 
-        res.json({ note });
+        res.json(note);
     } catch (error) {
         console.error("Ошибка при получении заметки к фильму:", error.message);
         res.status(500).json({ error: "Внутренняя ошибка сервера" });
@@ -76,7 +72,7 @@ export const getOneMovieNote = async (req, res) => {
 
 export const getMovieNote = async (req, res) => {
     try {
-        const { userId } = req.userl
+        const userId = req.user.id
 
         if (!userId) {
             return res.status(400).json({ error: "Требуется указать ID пользователя." });
@@ -88,7 +84,7 @@ export const getMovieNote = async (req, res) => {
             return res.status(404).json({ error: "Заметка не найдена." });
         }
 
-        res.json({ note });
+        res.json(note);
     } catch (error) {
         console.error("Ошибка при получении заметки к фильму:", error.message);
         res.status(500).json({ error: "Внутренняя ошибка сервера" });

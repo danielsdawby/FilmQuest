@@ -118,8 +118,9 @@ export const getUpcomingMovies = async (req, res) => {
 
         const movies = response.data.results;
 
+        // Для каждого фильма получаем видео (трейлер)
         const moviesWithVideos = await Promise.all(
-            movies.slice(0, 10).map(async (movie) => {
+            movies.slice(0, 5).map(async (movie) => {
                 try {
                     const videoRes = await axios.get(`${TMDB_API_URL}/movie/${movie.id}/videos`, {
                         params: { language: "ru-RU" },
@@ -151,12 +152,20 @@ export const getOneMovie = async (req, res) => {
     try {
         const { id } = req.params; 
 
-        const response = await axios.get(`${TMDB_API_URL}/movie/${id}`, {
+        const movieResponse = await axios.get(`${TMDB_API_URL}/movie/${id}`, {
             params: { language: 'ru-RU' },
             headers: HEADERS
         });
 
-        res.status(200).json(response.data);
+        const creditsResponse = await axios.get(`${TMDB_API_URL}/movie/${id}/credits`, {
+            params: { language: 'ru-RU' },
+            headers: HEADERS
+        });
+
+        const movieData = movieResponse.data;
+        movieData.cast = creditsResponse.data.cast.slice(0, 12); 
+
+        res.status(200).json(movieData);
     } catch (error) {
         console.error("Ошибка при получении одного фильма:", error.message);
 
@@ -283,3 +292,29 @@ export const checkMovieInLists = async (req, res) => {
         res.status(500).json({ error: "Ошибка сервера" });
     }
 };
+
+export const removeWatchedMovie = async (req, res) => {
+    try {
+        const { movieId } = req.params; 
+        const { userId } = req.user;
+
+        if (!movieId) {
+            return res.status(400).json({ error: "Не указан movieId" });
+        }
+
+        const deletedMovie = await WatchList.findOneAndDelete({ userId, movieId });
+
+        if (!deletedMovie) {
+            return res.status(404).json({ error: "Фильм не найден в вашем списке" });
+        }
+
+        res.status(200).json({ 
+            message: "Фильм удалён из списка",
+            deletedMovie: deletedMovie.movieId 
+        });
+    } catch (error) {
+        console.error("Ошибка при удалении фильма:", error);
+        res.status(500).json({ error: "Внутренняя ошибка сервера" });
+    }
+};
+

@@ -1,38 +1,46 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../axiosInstace.js";
 
-export const addMovieNote = createAsyncThunk("notes/addMovieNote", async (noteData, { rejectWithValue }) => {
-  try {
-    const response = await axios.post("/api/note", noteData);
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response.data);
+export const addMovieNote = createAsyncThunk(
+  "notes/addMovieNote",
+  async ({ userId, movieId, note }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/api/note", { userId, movieId, note });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
-});
+);
 
-export const getMovieNotes = createAsyncThunk("notes/getMovieNotes", async (movieId, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(`/api/note`);
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response.data);
+export const getMovieNotes = createAsyncThunk(
+  "notes/getMovieNotes",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/api/note/${userId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
-});
+);
 
-export const getOneMovieNote = createAsyncThunk("notes/getOneMovieNote", async (movieId, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(`/api/note/${movieId}`);
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response.data);
+export const deleteMovieNote = createAsyncThunk(
+  "notes/deleteMovieNote",
+  async (id, { rejectWithValue }) => {
+    try {
+      await axios.delete(`/api/note/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
-});
+);
 
 const noteSlice = createSlice({
   name: "notes",
   initialState: {
     notes: [],
-    note: null,
     loading: false,
     error: null,
   },
@@ -41,39 +49,39 @@ const noteSlice = createSlice({
     builder
       .addCase(addMovieNote.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(addMovieNote.fulfilled, (state, action) => {
         state.loading = false;
-        state.note = action.payload.note;
+        state.notes.push(action.payload);
       })
       .addCase(addMovieNote.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || action.error.message;
       })
-
-      .addCase(getOneMovieNote.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(getOneMovieNote.fulfilled, (state, action) => {
-        state.loading = false;
-        state.note = action.payload.note;
-      })
-      .addCase(getOneMovieNote.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
       .addCase(getMovieNotes.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(getMovieNotes.fulfilled, (state, action) => {
         state.loading = false;
-        console.log(getMovieNotes);
-        state.notes = action.payload.note;
+        state.notes = action.payload;
       })
       .addCase(getMovieNotes.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || action.error.message;
+      })
+      .addCase(deleteMovieNote.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteMovieNote.fulfilled, (state, action) => {
+        state.loading = false;
+        state.notes = state.notes.filter((note) => note._id !== action.payload);
+      })
+      .addCase(deleteMovieNote.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
       });
   },
 });
