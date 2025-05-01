@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getMovieById } from "../stores/slices/movieSlice";
-import { addToWatchlist } from "../stores/slices/watchListSlice";
-import { removeFromWatchlist } from "../stores/slices/watchListSlice";
-import { getWatchList } from "../stores/slices/watchListSlice";
+import { addToWatchlist, removeFromWatchlist, getWatchList } from "../stores/slices/watchListSlice";
 import NoteModal from "../components/NoteModal";
 import { Link } from "react-router-dom";
 
@@ -14,41 +12,61 @@ const FilmPage = () => {
   const { movie, loading, error } = useSelector((state) => state.movie);
   const { watchlist } = useSelector((state) => state.watchlist);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const isInWatchlist = watchlist.some((item) => item.movieId === movie?.id);
   const currentWatchlistItem = watchlist.find((item) => item.movieId === id);
-
-  console.log(movie);
 
   useEffect(() => {
     dispatch(getMovieById(id));
     dispatch(getWatchList());
   }, [id, dispatch]);
 
+  const showMessage = (type, message) => {
+    if (type === "error") {
+      setErrorMessage(message);
+      setSuccessMessage('');
+    } else {
+      setSuccessMessage(message);
+      setErrorMessage('');
+    }
+    setTimeout(() => {
+      setErrorMessage('');
+      setSuccessMessage('');
+    }, 2500);
+  };
+
   const addToWatched = async () => {
+    if (!movie || !movie.id) {
+      showMessage("error", "Ошибка: данные о фильме отсутствуют.");
+      return;
+    }
     const data = { movieId: movie.id, runtime: movie.runtime, type: "done" };
     await dispatch(addToWatchlist(data));
     await dispatch(getWatchList());
+    showMessage("success", "Добавлено в просмотренные.");
   };
 
   const addToWant = async () => {
+    if (!movie || !movie.id) {
+      showMessage("error", "Ошибка: данные о фильме отсутствуют.");
+      return;
+    }
     const data = { movieId: movie.id, runtime: movie.runtime, type: "want" };
     await dispatch(addToWatchlist(data));
     await dispatch(getWatchList());
+    showMessage("success", "Добавлено в список желаемого.");
   };
 
   const handleRemoveFromWatchlist = async () => {
     await dispatch(removeFromWatchlist(movie.id));
     await dispatch(getWatchList());
+    showMessage("success", "Фильм удалён из списка.");
   };
 
-  const openNoteModal = () => {
-    setIsNoteModalOpen(true);
-  };
-
-  const closeNoteModal = () => {
-    setIsNoteModalOpen(false);
-  };
+  const openNoteModal = () => setIsNoteModalOpen(true);
+  const closeNoteModal = () => setIsNoteModalOpen(false);
 
   if (loading)
     return (
@@ -71,6 +89,13 @@ const FilmPage = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-dark text-gray-900 dark:text-white py-10 px-4 transition-colors duration-300">
+      {errorMessage && (
+        <div className="text-center text-red-600 font-medium mb-4">{errorMessage}</div>
+      )}
+      {successMessage && (
+        <div className="text-center text-green-600 font-medium mb-4">{successMessage}</div>
+      )}
+
       <div className="max-w-6xl mx-auto bg-gray-100 dark:bg-gray-900 rounded-2xl shadow-lg p-6 md:p-10 flex flex-col md:flex-row gap-10 transition-colors duration-300">
         <div className="md:w-1/3 relative">
           <img
@@ -93,36 +118,14 @@ const FilmPage = () => {
           <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">{movie.overview}</p>
 
           <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-white">Дата выхода:</span> {movie.release_date}
-            </p>
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-white">Жанры:</span>{" "}
-              {movie.genres.map((g) => g.name).join(", ")}
-            </p>
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-white">Страны:</span>{" "}
-              {movie.production_countries.map((c) => c.name).join(", ")}
-            </p>
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-white">Студии:</span>{" "}
-              {movie.production_companies.map((c) => c.name).join(", ")}
-            </p>
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-white">Бюджет:</span>{" "}
-              {movie.budget ? `$${movie.budget.toLocaleString()}` : "Неизвестно"}
-            </p>
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-white">Кассовые сборы:</span>{" "}
-              {movie.revenue ? `$${movie.revenue.toLocaleString()}` : "Неизвестно"}
-            </p>
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-white">Длительность:</span> {movie.runtime} минут
-            </p>
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-white">Языки:</span>{" "}
-              {movie.spoken_languages.map((l) => l.name).join(", ")}
-            </p>
+            <p><span className="font-semibold text-gray-900 dark:text-white">Дата выхода:</span> {movie.release_date}</p>
+            <p><span className="font-semibold text-gray-900 dark:text-white">Жанры:</span> {movie.genres.map((g) => g.name).join(", ")}</p>
+            <p><span className="font-semibold text-gray-900 dark:text-white">Страны:</span> {movie.production_countries.map((c) => c.name).join(", ")}</p>
+            <p><span className="font-semibold text-gray-900 dark:text-white">Студии:</span> {movie.production_companies.map((c) => c.name).join(", ")}</p>
+            <p><span className="font-semibold text-gray-900 dark:text-white">Бюджет:</span> {movie.budget ? `$${movie.budget.toLocaleString()}` : "Неизвестно"}</p>
+            <p><span className="font-semibold text-gray-900 dark:text-white">Кассовые сборы:</span> {movie.revenue ? `$${movie.revenue.toLocaleString()}` : "Неизвестно"}</p>
+            <p><span className="font-semibold text-gray-900 dark:text-white">Длительность:</span> {movie.runtime} минут</p>
+            <p><span className="font-semibold text-gray-900 dark:text-white">Языки:</span> {movie.spoken_languages.map((l) => l.name).join(", ")}</p>
           </div>
 
           <div className="space-y-4">
@@ -169,16 +172,13 @@ const FilmPage = () => {
                 </button>
               </>
             )}
-
             {isInWatchlist && (
-              <>
-                <button
-                  onClick={handleRemoveFromWatchlist}
-                  className="px-5 py-2 bg-red-600 hover:bg-red-700 transition rounded-full font-semibold text-white shadow"
-                >
-                  Удалить из списка
-                </button>
-              </>
+              <button
+                onClick={handleRemoveFromWatchlist}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 transition rounded-full font-semibold text-white shadow"
+              >
+                Удалить из списка
+              </button>
             )}
             <button
               onClick={openNoteModal}
@@ -189,7 +189,9 @@ const FilmPage = () => {
           </div>
         </div>
       </div>
-      {isNoteModalOpen && <NoteModal movieId={id} onClose={closeNoteModal} existingNote={currentWatchlistItem?.note} />}
+      {isNoteModalOpen && (
+        <NoteModal movieId={id} onClose={closeNoteModal} existingNote={currentWatchlistItem?.note} />
+      )}
     </div>
   );
 };

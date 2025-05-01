@@ -14,20 +14,21 @@ const ActorPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchActor = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`/api/person/${id}`);
-        setActor(response.data);
-      } catch (err) {
-        setError("Ошибка при загрузке данных актёра");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchActor = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`/api/person/${id}`);
+      setActor(response.data);
+      setError(null); 
+    } catch (err) {
+      setError("Ошибка при загрузке данных актёра");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchActor();
   }, [id]);
 
@@ -37,12 +38,20 @@ const ActorPage = () => {
         Загрузка...
       </div>
     );
+
   if (error)
     return (
       <div className="text-center text-red-500 text-lg py-10 bg-white dark:bg-dark transition-colors duration-300 min-h-screen flex items-center justify-center">
         Ошибка: {error}
+        <button
+          onClick={fetchActor} 
+          className="ml-4 text-blue-500 hover:underline"
+        >
+          Попробовать снова
+        </button>
       </div>
     );
+
   if (!actor)
     return (
       <div className="text-center text-gray-400 py-10 bg-white dark:bg-dark transition-colors duration-300 min-h-screen flex items-center justify-center">
@@ -53,7 +62,6 @@ const ActorPage = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-dark text-gray-900 dark:text-white py-10 px-4 transition-colors duration-300">
       <div className="max-w-6xl mx-auto bg-gray-100 dark:bg-gray-900 rounded-2xl shadow-lg p-6 md:p-10 flex flex-col md:flex-row gap-10 transition-colors duration-300">
-        {/* Левая колонка: фото */}
         <div className="md:w-1/3 relative">
           <img
             src={
@@ -66,11 +74,9 @@ const ActorPage = () => {
           />
         </div>
 
-        {/* Правая колонка: информация */}
         <div className="md:w-2/3 space-y-6">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{actor.name}</h1>
 
-          {/* Основные данные */}
           <div className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed space-y-1">
             {actor.also_known_as && actor.also_known_as.length > 0 && (
               <p>
@@ -102,7 +108,6 @@ const ActorPage = () => {
             </p>
           </div>
 
-          {/* Социальные сети */}
           {actor.external_ids && (
             <div>
               <h2 className="text-2xl font-semibold mb-2">Социальные сети</h2>
@@ -150,7 +155,6 @@ const ActorPage = () => {
             </div>
           )}
 
-          {/* Биография */}
           <div>
             <h2 className="text-2xl font-semibold mb-2">Биография</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
@@ -158,11 +162,8 @@ const ActorPage = () => {
             </p>
           </div>
 
-          {/* Фильмография */}
           <div>
             <h2 className="text-2xl font-semibold mb-4">Фильмография</h2>
-
-            {/* Фильмы */}
             {actor.movie_credits?.cast?.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-xl font-semibold mb-3">Фильмы</h3>
@@ -193,7 +194,6 @@ const ActorPage = () => {
               </div>
             )}
 
-            {/* ТВ-шоу */}
             {actor.tv_credits?.cast?.length > 0 && (
               <div>
                 <h3 className="text-xl font-semibold mb-3">ТВ-шоу</h3>

@@ -3,17 +3,18 @@ import axios from "../../axiosInstace.js";
 
 export const getMovies = createAsyncThunk(
     "movies/getMovies",
-    async ({ type }, { rejectWithValue }) => {
-        try {
-            const response = await axios.get("/api/movie", {
-                params: { type },
-            });
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
-        }
+    async ({ type, page = 1, genre, country, year }, { rejectWithValue }) => {
+      try {
+        const response = await axios.get("/api/movie", {
+          params: { type, page, genre, country, year }, 
+        });
+        return response.data;
+      } catch (error) {
+        return rejectWithValue(error.response?.data || "Server error");
+      }
     }
-);
+  );
+  
 
 export const getMovieRecommendations = createAsyncThunk(
     "movies/getRecommendations",
@@ -59,6 +60,7 @@ const movieSlice = createSlice({
         loading: false,
         error: null,
         searchResults: [],
+        totalPages: 1,
     },
     reducers: {
         clearSearch: (state) => {
@@ -73,6 +75,7 @@ const movieSlice = createSlice({
             .addCase(getMovies.fulfilled, (state, action) => {
                 state.loading = false;
                 state.movies = action.payload.results;
+                state.totalPages = action.payload.totalPages || 1;
             })
             .addCase(getMovies.rejected, (state, action) => {
                 state.loading = false;
@@ -104,6 +107,7 @@ const movieSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             });
+            
     },
 });
 
