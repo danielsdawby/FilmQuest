@@ -1,7 +1,8 @@
 import Movie from "../models/movie.model.js";
 import WatchList from "../models/watchList.model.js";
 import axios from "axios";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
+import { GENRES, COUNTRIES } from "../utils/filter.utils.js";
 
 dotenv.config();
 
@@ -19,16 +20,16 @@ export const getMovies = async (req, res) => {
 
     let url;
     switch (type) {
-      case 'recommendations':
+      case "recommendations":
         url = `${TMDB_API_URL}/discover/movie`;
         break;
-      case 'movies':
+      case "movies":
         url = `${TMDB_API_URL}/discover/movie`;
         break;
-      case 'tv':
+      case "tv":
         url = `${TMDB_API_URL}/tv/popular`;
         break;
-      case 'trending':
+      case "trending":
         url = `${TMDB_API_URL}/trending/all/day`;
         break;
       default:
@@ -38,7 +39,9 @@ export const getMovies = async (req, res) => {
     const startIndex = (page - 1) * resultsPerPage;
     const firstPage = Math.floor(startIndex / TMDB_PAGE_SIZE) + 1;
     const offsetInFirst = startIndex % TMDB_PAGE_SIZE;
-    const pagesNeeded = Math.ceil((offsetInFirst + resultsPerPage) / TMDB_PAGE_SIZE);
+    const pagesNeeded = Math.ceil(
+      (offsetInFirst + resultsPerPage) / TMDB_PAGE_SIZE
+    );
 
     const requests = [];
     for (let i = 0; i < pagesNeeded; i++) {
@@ -57,13 +60,16 @@ export const getMovies = async (req, res) => {
     }
 
     const responses = await Promise.all(requests);
-    let allResults = responses.flatMap(r => r.data.results);
-    let sliced = allResults.slice(offsetInFirst, offsetInFirst + resultsPerPage);
+    let allResults = responses.flatMap((r) => r.data.results);
+    let sliced = allResults.slice(
+      offsetInFirst,
+      offsetInFirst + resultsPerPage
+    );
 
     if (userId) {
       const watched = await WatchList.find({ userId }).select("movieId");
-      const watchedIds = watched.map(m => m.movieId);
-      sliced = sliced.filter(m => !watchedIds.includes(m.id));
+      const watchedIds = watched.map((m) => m.movieId);
+      sliced = sliced.filter((m) => !watchedIds.includes(m.id));
     }
 
     const totalResults = responses[0].data.total_results;
@@ -79,7 +85,6 @@ export const getMovies = async (req, res) => {
     return res.status(500).json({ error: "Ошибка при получении фильмов" });
   }
 };
-
 
 export const searchMovies = async (req, res) => {
   try {
@@ -99,10 +104,13 @@ export const searchMovies = async (req, res) => {
 export const getRecommendations = async (req, res) => {
   try {
     const { movieId } = req.params;
-    const response = await axios.get(`${TMDB_API_URL}/movie/${movieId}/recommendations`, {
-      params: { language: "ru-RU" },
-      headers: HEADERS,
-    });
+    const response = await axios.get(
+      `${TMDB_API_URL}/movie/${movieId}/recommendations`,
+      {
+        params: { language: "ru-RU" },
+        headers: HEADERS,
+      }
+    );
     res.json(response.data);
   } catch (error) {
     console.error("Ошибка при получении рекомендаций:", error);
@@ -133,12 +141,15 @@ export const getUpcomingMovies = async (req, res) => {
     const moviesWithVideos = await Promise.all(
       movies.slice(0, 5).map(async (movie) => {
         try {
-          const videoRes = await axios.get(`${TMDB_API_URL}/movie/${movie.id}/videos`, {
-            params: { language: "ru-RU" },
-            headers: HEADERS,
-          });
+          const videoRes = await axios.get(
+            `${TMDB_API_URL}/movie/${movie.id}/videos`,
+            {
+              params: { language: "ru-RU" },
+              headers: HEADERS,
+            }
+          );
           const trailers = videoRes.data.results.filter(
-            v => v.type === "Trailer" && v.site === "YouTube"
+            (v) => v.type === "Trailer" && v.site === "YouTube"
           );
           return {
             ...movie,
@@ -175,7 +186,9 @@ export const getOneMovie = async (req, res) => {
   } catch (error) {
     console.error("Ошибка при получении одного фильма:", error);
     if (error.response) {
-      return res.status(error.response.status).json({ error: error.response.data.status_message });
+      return res
+        .status(error.response.status)
+        .json({ error: error.response.data.status_message });
     }
     res.status(500).json({ error: "Ошибка при получении одного фильма" });
   }
@@ -204,7 +217,9 @@ export const addWatchedMovie = async (req, res) => {
     }
     const existing = await WatchList.findOne({ userId, movieId });
     if (existing) {
-      return res.status(400).json({ error: "Фильм уже отмечен как просмотренный" });
+      return res
+        .status(400)
+        .json({ error: "Фильм уже отмечен как просмотренный" });
     }
     const watchedMovie = new WatchList({ userId, movieId, runtime, type });
     await watchedMovie.save();
@@ -218,7 +233,8 @@ export const addWatchedMovie = async (req, res) => {
 export const getWatchedMovies = async (req, res) => {
   try {
     const { userId } = req.user;
-    if (!userId) return res.status(400).json({ error: "Отсутствуют обязательные поля" });
+    if (!userId)
+      return res.status(400).json({ error: "Отсутствуют обязательные поля" });
     const watchlist = await WatchList.find({ userId });
     res.status(200).json({ watchlist });
   } catch (error) {
@@ -230,10 +246,11 @@ export const getWatchedMovies = async (req, res) => {
 export const getTotalWatchTime = async (req, res) => {
   try {
     const { userId } = req.user;
-    if (!userId) return res.status(400).json({ error: "Требуется ID пользователя" });
+    if (!userId)
+      return res.status(400).json({ error: "Требуется ID пользователя" });
     const agg = await Movie.aggregate([
       { $match: { userId } },
-      { $group: { _id: null, totalTime: { $sum: "$runtime" } } }
+      { $group: { _id: null, totalTime: { $sum: "$runtime" } } },
     ]);
     const totalTime = agg.length ? agg[0].totalTime : 0;
     res.json({ userId, totalWatchTime: totalTime });
@@ -248,10 +265,16 @@ export const checkMovieInLists = async (req, res) => {
     const { movieId } = req.query;
     const { userId } = req.user;
     if (!userId || !movieId) {
-      return res.status(400).json({ error: "Требуются ID пользователя и фильма" });
+      return res
+        .status(400)
+        .json({ error: "Требуются ID пользователя и фильма" });
     }
     const watched = await WatchList.findOne({ userId, movieId });
-    const inWatchlist = await WatchList.findOne({ userId, movieId, type: "want" });
+    const inWatchlist = await WatchList.findOne({
+      userId,
+      movieId,
+      type: "want",
+    });
     res.json({ watched: !!watched, watchlist: !!inWatchlist });
   } catch (error) {
     console.error("Ошибка при проверке в списках:", error);
@@ -268,9 +291,27 @@ export const removeWatchedMovie = async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: "Фильм не найден в вашем списке" });
     }
-    res.status(200).json({ message: "Фильм удалён", deletedMovie: deleted.movieId });
+    res
+      .status(200)
+      .json({ message: "Фильм удалён", deletedMovie: deleted.movieId });
   } catch (error) {
     console.error("Ошибка при удалении фильма:", error);
     res.status(500).json({ error: "Внутренняя ошибка сервера" });
+  }
+};
+
+/* -------------------- */
+
+export const getFilterData = async (req, res) => {
+  try {
+    const data = {
+      genres: GENRES,
+      countries: COUNTRIES,
+    };
+
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error("Ошибка в getFilterData", error);
+    res.status(400).json({ error: "Ошибка" });
   }
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getMovies } from "../stores/slices/movieSlice";
+import { getFilterData } from "../stores/slices/movieSlice";
 import ItemCart from "../components/ItemCart";
 import UpcomingPremieres from "../components/UpcomingPremieres";
 
@@ -9,51 +10,6 @@ import GridDark from "../assets/images/grid-dark.svg";
 import RowLight from "../assets/images/row-light.svg";
 import RowDark from "../assets/images/row-dark.svg";
 import { motion } from "framer-motion";
-
-const GENRES = [
-  { id: 28, name: "Боевик" },
-  { id: 12, name: "Приключения" },
-  { id: 16, name: "Мультфильм" },
-  { id: 35, name: "Комедия" },
-  { id: 80, name: "Криминал" },
-  { id: 99, name: "Документальный" },
-  { id: 18, name: "Драма" },
-  { id: 10751, name: "Семейный" },
-  { id: 14, name: "Фэнтези" },
-  { id: 36, name: "История" },
-  { id: 27, name: "Ужасы" },
-  { id: 10402, name: "Музыка" },
-  { id: 9648, name: "Детектив" },
-  { id: 10749, name: "Мелодрама" },
-  { id: 878, name: "Фантастика" },
-  { id: 10770, name: "Телефильм" },
-  { id: 53, name: "Триллер" },
-  { id: 10752, name: "Военный" },
-  { id: 37, name: "Вестерн" },
-];
-
-const COUNTRIES = [
-  { code: "US", name: "США" },
-  { code: "RU", name: "Россия" },
-  { code: "FR", name: "Франция" },
-  { code: "GB", name: "Великобритания" },
-  { code: "DE", name: "Германия" },
-  { code: "JP", name: "Япония" },
-  { code: "IT", name: "Италия" },
-  { code: "IN", name: "Индия" },
-  { code: "KR", name: "Южная Корея" },
-  { code: "ES", name: "Испания" },
-  { code: "CN", name: "Китай" },
-  { code: "CA", name: "Канада" },
-  { code: "AU", name: "Австралия" },
-  { code: "BR", name: "Бразилия" },
-  { code: "SE", name: "Швеция" },
-  { code: "DK", name: "Дания" },
-  { code: "FI", name: "Финляндия" },
-  { code: "PL", name: "Польша" },
-  { code: "UA", name: "Украина" },
-  { code: "TR", name: "Турция" },
-];
 
 function useDarkMode() {
   const [isDark, setIsDark] = useState(false);
@@ -130,10 +86,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange, loading }) => {
 
 const HomePage = () => {
   const dispatch = useDispatch();
-  const { movies, loading, error, totalPages } = useSelector(
-    (state) => state.movie
-  );
+  const { movies, totalPages } = useSelector((state) => state.movie);
   const watchList = useSelector((state) => state.watchList?.movies || []);
+  const filterData = useSelector((state) => state.movie?.filters || {});
 
   const [selectedButton, setSelectedButton] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState(0);
@@ -142,6 +97,10 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loadingData, setLoadingData] = useState(false);
+
+  const [filterGenre, setFilterGenre] = useState("");
+  const [filterCountry, setFilterCountry] = useState("");
+  const [filterYear, setFilterYear] = useState("");
 
   const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -171,6 +130,8 @@ const HomePage = () => {
 
     setLoadingData(true);
     setErrorMessage(null);
+
+    dispatch(getFilterData());
 
     dispatch(
       getMovies({
@@ -270,12 +231,12 @@ const HomePage = () => {
 
             <div className="flex flex-col w-full mt-8 gap-3">
               <select
-                value={selectedGenre}
-                onChange={(e) => setSelectedGenre(e.target.value)}
+                value={filterGenre}
+                onChange={(e) => setFilterGenre(e.target.value)}
                 className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               >
                 <option value="">Жанр</option>
-                {GENRES.map((g) => (
+                {filterData?.genres?.map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.name}
                   </option>
@@ -283,12 +244,12 @@ const HomePage = () => {
               </select>
 
               <select
-                value={selectedCountry}
-                onChange={(e) => setSelectedCountry(e.target.value)}
+                value={filterCountry}
+                onChange={(e) => setFilterCountry(e.target.value)}
                 className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               >
                 <option value="">Страна</option>
-                {COUNTRIES.map((c) => (
+                {filterData?.countries?.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.name}
                   </option>
@@ -296,8 +257,8 @@ const HomePage = () => {
               </select>
 
               <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
                 className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               >
                 <option value="">Год</option>
@@ -310,6 +271,33 @@ const HomePage = () => {
                   );
                 })}
               </select>
+            </div>
+            <div className="flex mt-4 gap-2">
+              <button
+                className="w-1/2 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition text-sm"
+                onClick={() => {
+                  setFilterGenre("");
+                  setFilterCountry("");
+                  setFilterYear("");
+                  setSelectedGenre("");
+                  setSelectedCountry("");
+                  setSelectedYear("");
+                  setCurrentPage(1);
+                }}
+              >
+                Сбросить фильтры
+              </button>
+              <button
+                className="w-1/2 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition text-sm"
+                onClick={() => {
+                  setSelectedGenre(filterGenre);
+                  setSelectedCountry(filterCountry);
+                  setSelectedYear(filterYear);
+                  setCurrentPage(1);
+                }}
+              >
+                Применить фильтры
+              </button>
             </div>
           </div>
 
